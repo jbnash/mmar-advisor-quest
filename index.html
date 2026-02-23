@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MMAR Advisor Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0d;
+    --paper: #f5f0e8;
+    --cream: #ede7d9;
+    --accent: #d4401a;
+    --gold: #c9952a;
+    --forest: #2a5c45;
+    --sky: #2b5fa0;
+    --muted: #7a7060;
+    --success: #2a5c45;
+    --warn: #c9952a;
+    --danger: #d4401a;
+    --card: #ffffff;
+    --shadow: 0 2px 12px rgba(15,14,13,0.12);
+    --shadow-lg: 0 8px 32px rgba(15,14,13,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ---- SCREENS ---- */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ---- LOGIN ---- */
+  #login-screen {
+    align-items: center;
+    justify-content: center;
+    background: var(--ink);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #login-screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 40px,
+      rgba(255,255,255,0.02) 40px, rgba(255,255,255,0.02) 41px
+    ),
+    repeating-linear-gradient(
+      90deg, transparent, transparent 40px,
+      rgba(255,255,255,0.02) 40px, rgba(255,255,255,0.02) 41px
+    );
+  }
+
+  .login-box {
+    background: var(--paper);
+    border-radius: 4px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 420px;
+    position: relative;
+    z-index: 1;
+    border-top: 6px solid var(--accent);
+  }
+
+  .login-eyebrow {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .login-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .login-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  .field-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .field-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--cream);
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    background: white;
+    color: var(--ink);
+    transition: border-color 0.15s;
+    margin-bottom: 20px;
+  }
+
+  .field-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .btn-primary:hover { background: #b83415; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* ---- TOP NAV ---- */
+  .topnav {
+    background: var(--ink);
+    color: white;
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .nav-brand {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: 0.03em;
+  }
+
+  .nav-brand span { color: var(--accent); }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 12px;
+  }
+
+  .xp-badge {
+    background: var(--gold);
+    color: var(--ink);
+    padding: 4px 10px;
+    border-radius: 2px;
+    font-weight: 500;
+    font-size: 11px;
+  }
+
+  .streak-badge {
+    color: var(--gold);
+    font-size: 13px;
+  }
+
+  .username-tag {
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+  }
+
+  /* ---- HOME SCREEN ---- */
+  #home-screen { background: var(--paper); }
+
+  .home-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 0;
+    flex: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 32px 24px;
+    gap: 32px;
+  }
+
+  .home-main {}
+  .home-sidebar {}
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .welcome-banner {
+    background: var(--ink);
+    color: white;
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .welcome-banner::after {
+    content: 'MMAR';
+    position: absolute;
+    right: -10px;
+    top: -20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 120px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.04);
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .welcome-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .welcome-desc {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.6;
+    max-width: 480px;
+  }
+
+  .mode-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .mode-card {
+    background: white;
+    border-radius: 4px;
+    padding: 24px;
+    border: 2px solid var(--cream);
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mode-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
+  }
+
+  .mode-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .mode-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .mode-desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .mode-tag {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  .tag-daily { background: #fff3cd; color: var(--gold); }
+  .tag-new { background: #d4edda; color: var(--forest); }
+
+  /* ---- LEADERBOARD ---- */
+  .leaderboard-card {
+    background: white;
+    border-radius: 4px;
+    border: 2px solid var(--cream);
+    overflow: hidden;
+  }
+
+  .leaderboard-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .leaderboard-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .lb-row {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--cream);
+    transition: background 0.1s;
+    font-size: 12px;
+  }
+
+  .lb-row:last-child { border-bottom: none; }
+  .lb-row:hover { background: var(--paper); }
+  .lb-row.is-you { background: #fff8f6; }
+
+  .lb-rank {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    width: 24px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .lb-rank.gold { color: #c9952a; }
+  .lb-rank.silver { color: #8a8a8a; }
+  .lb-rank.bronze { color: #a0633a; }
+
+  .lb-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .lb-name { flex: 1; }
+  .lb-you-tag {
+    font-size: 9px;
+    background: var(--accent);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+  .lb-xp {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    color: var(--gold);
+    font-size: 13px;
+  }
+
+  /* ---- QUIZ SCREEN ---- */
+  #quiz-screen { background: var(--paper); }
+
+  .quiz-layout {
+    flex: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .quiz-progress {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .progress-bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--cream);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--forest);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-count {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .quiz-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 4px;
+  }
+
+  .scenario-tag {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+    background: var(--cream);
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .quiz-question {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
+
+  .quiz-context {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 28px;
+    padding: 16px;
+    background: white;
+    border-radius: 3px;
+    border-left: 3px solid var(--gold);
+  }
+
+  .answer-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .answer-btn {
+    padding: 16px 20px;
+    background: white;
+    border: 2px solid var(--cream);
+    border-radius: 3px;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink);
+    transition: all 0.15s;
+    position: relative;
+  }
+
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--sky);
+    background: #f0f5ff;
+  }
+
+  .answer-btn.correct {
+    border-color: var(--forest);
+    background: #edf7f2;
+    color: var(--forest);
+  }
+
+  .answer-btn.wrong {
+    border-color: var(--danger);
+    background: #fef0ed;
+    color: var(--danger);
+  }
+
+  .answer-btn.reveal-correct {
+    border-color: var(--forest);
+    background: #edf7f2;
+    color: var(--forest);
+    opacity: 0.7;
+  }
+
+  .answer-btn:disabled { cursor: default; }
+
+  .feedback-box {
+    padding: 20px;
+    border-radius: 3px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 1.7;
+    display: none;
+  }
+
+  .feedback-box.correct-fb {
+    background: #edf7f2;
+    border: 2px solid var(--forest);
+    color: var(--forest);
+    display: block;
+  }
+
+  .feedback-box.wrong-fb {
+    background: #fef0ed;
+    border: 2px solid var(--danger);
+    color: var(--danger);
+    display: block;
+  }
+
+  .feedback-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .next-btn {
+    align-self: flex-end;
+    padding: 12px 28px;
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: none;
+    transition: background 0.15s;
+  }
+
+  .next-btn:hover { background: var(--accent); }
+  .next-btn.visible { display: block; }
+
+  /* ---- ESCAPE ROOM ---- */
+  #escape-screen { background: var(--ink); color: white; }
+
+  .escape-layout {
+    flex: 1;
+    max-width: 760px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .escape-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+  }
+
+  .escape-phase-indicator {
+    display: flex;
+    gap: 8px;
+  }
+
+  .phase-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    transition: all 0.3s;
+  }
+
+  .phase-dot.unlocked {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .phase-dot.current {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: white;
+  }
+
+  .escape-close {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.4);
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  .case-file {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    padding: 24px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .case-file-stamp {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 3px 8px;
+    opacity: 0.8;
+  }
+
+  .case-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 8px;
+  }
+
+  .case-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: white;
+  }
+
+  .case-body {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    line-height: 1.8;
+  }
+
+  .clue-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .clue-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 3px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .clue-card:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+  }
+
+  .clue-card.revealed {
+    border-color: var(--gold);
+    background: rgba(201,149,42,0.08);
+  }
+
+  .clue-icon { font-size: 20px; margin-bottom: 8px; }
+
+  .clue-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 4px;
+  }
+
+  .clue-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 4px;
+  }
+
+  .clue-content {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+    display: none;
+  }
+
+  .clue-card.revealed .clue-content { display: block; color: rgba(201,149,42,0.9); }
+  .clue-card.revealed .clue-label { color: var(--gold); }
+
+  .escape-question {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  .escape-q-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .escape-q-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: white;
+  }
+
+  .escape-answers {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .escape-answer-btn {
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 3px;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    transition: all 0.15s;
+    line-height: 1.5;
+  }
+
+  .escape-answer-btn:hover:not(:disabled) {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.25);
+    color: white;
+  }
+
+  .escape-answer-btn.correct {
+    border-color: var(--forest);
+    background: rgba(42,92,69,0.2);
+    color: #7dd4aa;
+  }
+
+  .escape-answer-btn.wrong {
+    border-color: var(--danger);
+    background: rgba(212,64,26,0.15);
+    color: #f09080;
+  }
+
+  .escape-answer-btn.reveal-correct {
+    border-color: var(--forest);
+    background: rgba(42,92,69,0.1);
+    color: #7dd4aa;
+    opacity: 0.6;
+  }
+
+  .escape-feedback {
+    padding: 16px 20px;
+    border-radius: 3px;
+    font-size: 12px;
+    line-height: 1.7;
+    display: none;
+    margin-bottom: 16px;
+  }
+
+  .escape-feedback.correct-fb {
+    background: rgba(42,92,69,0.2);
+    border: 1px solid var(--forest);
+    color: #7dd4aa;
+    display: block;
+  }
+
+  .escape-feedback.wrong-fb {
+    background: rgba(212,64,26,0.15);
+    border: 1px solid var(--danger);
+    color: #f09080;
+    display: block;
+  }
+
+  .unlock-btn {
+    padding: 14px 28px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: none;
+    transition: background 0.15s;
+    align-self: flex-end;
+  }
+
+  .unlock-btn:hover { background: #b83415; }
+  .unlock-btn.visible { display: block; }
+
+  /* ---- RESULTS ---- */
+  #results-screen {
+    background: var(--ink);
+    color: white;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .results-box {
+    max-width: 480px;
+    width: 100%;
+    padding: 48px 40px;
+    text-align: center;
+  }
+
+  .results-score-ring {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid var(--gold);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 28px;
+  }
+
+  .results-score-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .results-score-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+  }
+
+  .results-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 12px;
+  }
+
+  .results-message {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .xp-earned {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--ink);
+    padding: 8px 20px;
+    border-radius: 2px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+
+  .results-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .btn-secondary {
+    padding: 12px 24px;
+    background: rgba(255,255,255,0.08);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 3px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-secondary:hover { background: rgba(255,255,255,0.14); }
+
+  /* ---- ANIMATIONS ---- */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .screen.active { animation: fadeInUp 0.3s ease; }
+
+  .pulse {
+    animation: pulse 0.4s ease;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+
+  @media (max-width: 700px) {
+    .home-layout { grid-template-columns: 1fr; }
+    .mode-cards { grid-template-columns: 1fr; }
+    .clue-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== ONBOARDING OVERLAY ========== -->
+<div id="onboarding-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,14,13,0.92);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--paper);border-radius:4px;max-width:520px;width:90%;border-top:6px solid var(--accent);position:relative;overflow:hidden;">
+
+    <!-- Step indicators -->
+    <div style="display:flex;gap:6px;padding:20px 28px 0;justify-content:center;" id="onboard-dots"></div>
+
+    <!-- Steps -->
+    <div id="onboard-steps">
+
+      <div class="onboard-step" style="padding:28px 32px 32px;">
+        <div style="font-size:40px;margin-bottom:16px;">🎓</div>
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:10px;line-height:1.2;">You're an MMAR dissertation chair.</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:24px;">Your students use a research approach called <strong>Mixed Methods Action Research (MMAR)</strong> — and it works differently from traditional dissertations. This game trains your advising instincts through real scenarios drawn from actual student situations.</div>
+        <div style="background:var(--cream);border-radius:3px;padding:14px 16px;font-size:12px;color:var(--ink);line-height:1.7;">
+          <strong>The core thing to know:</strong> EdD students write their dissertation <em>during</em> coursework, not after. Each course scaffolds a specific MMAR phase. Your job is to keep them moving.
+        </div>
+      </div>
+
+      <div class="onboard-step" style="padding:28px 32px 32px;display:none;">
+        <div style="font-size:40px;margin-bottom:16px;">⚡</div>
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:10px;line-height:1.2;">Scenario Sprint</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:20px;">You get a student situation and four possible responses. Pick the <strong>most important first move</strong> — not the only valid move, but the most critical one given the context.</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+          <div style="padding:12px 14px;background:white;border:2px solid var(--cream);border-radius:3px;font-size:12px;color:var(--muted);">A plausible but wrong response — sounds reasonable</div>
+          <div style="padding:12px 14px;background:#edf7f2;border:2px solid var(--forest);border-radius:3px;font-size:12px;color:var(--forest);">✓ The best first move — this is what you're looking for</div>
+          <div style="padding:12px 14px;background:white;border:2px solid var(--cream);border-radius:3px;font-size:12px;color:var(--muted);">Another plausible but wrong response</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7;">After you answer, you'll see an explanation — including why the other options fall short. <strong>You earn 20 XP per correct answer.</strong></div>
+      </div>
+
+      <div class="onboard-step" style="padding:28px 32px 32px;display:none;">
+        <div style="font-size:40px;margin-bottom:16px;">🔍</div>
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:10px;line-height:1.2;">Case File Escape</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:20px;">You follow one student through all six MMAR phases. Each phase gives you <strong>clues to examine</strong> — click them to reveal evidence — then make an advising decision to unlock the next phase.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+          <div style="padding:12px;background:rgba(201,149,42,0.08);border:1px solid var(--gold);border-radius:3px;font-size:11px;color:var(--ink);line-height:1.6;"><strong style="color:var(--gold);">📋 Click clues first</strong><br>Gather evidence before deciding. All four clues together tell a story.</div>
+          <div style="padding:12px;background:rgba(42,92,69,0.06);border:1px solid var(--forest);border-radius:3px;font-size:11px;color:var(--ink);line-height:1.6;"><strong style="color:var(--forest);">🔓 Unlock phases</strong><br>Correct decisions unlock the next phase. Wrong answers still move forward — with explanation.</div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">Completing a phase earns <strong>40 XP</strong>. Completing the full case earns a <strong>100 XP bonus</strong>.</div>
+      </div>
+
+      <div class="onboard-step" style="padding:28px 32px 32px;display:none;">
+        <div style="font-size:40px;margin-bottom:16px;">🏆</div>
+        <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:10px;line-height:1.2;">The Leaderboard</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:20px;">Your XP accumulates across sessions and shows up on the department leaderboard. Play regularly to build your streak and climb the rankings.</div>
+        <div style="background:var(--cream);border-radius:3px;padding:14px 16px;font-size:12px;color:var(--ink);line-height:1.8;margin-bottom:20px;">
+          <strong>XP breakdown:</strong><br>
+          Scenario Sprint correct answer → <strong>20 XP</strong><br>
+          Perfect Sprint (5/5) → <strong>+50 XP bonus</strong><br>
+          Case File phase unlock → <strong>40 XP</strong><br>
+          Full case completion → <strong>+100 XP bonus</strong>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">You can revisit this guide anytime from the home screen. Ready?</div>
+      </div>
+
+    </div>
+
+    <!-- Navigation -->
+    <div style="padding:0 32px 28px;display:flex;justify-content:space-between;align-items:center;">
+      <button onclick="onboardPrev()" id="onboard-prev-btn" style="background:none;border:none;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);cursor:pointer;padding:8px 0;">← Back</button>
+      <button onclick="onboardNext()" id="onboard-next-btn" class="btn-primary" style="width:auto;padding:11px 28px;">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== HOW TO PLAY MODAL ========== -->
+<div id="howtoplay-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,14,13,0.85);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--paper);border-radius:4px;max-width:520px;width:90%;max-height:85vh;overflow-y:auto;border-top:6px solid var(--sky);">
+    <div style="padding:28px 32px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+        <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;">How to Play</div>
+        <button onclick="closeHowToPlay()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1;">✕</button>
+      </div>
+
+      <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">The MMAR Model</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:20px;">Your students use Mixed Methods Action Research — a six-phase iterative cycle. Unlike PhD programs, they build their dissertation <em>during</em> coursework. Each course scaffolds a specific phase.</div>
+
+      <div style="display:grid;grid-template-columns:28px 1fr;gap:6px 12px;font-size:12px;margin-bottom:24px;align-items:start;">
+        <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);">1</span><span><strong>Diagnosis</strong> — Using data to understand what's really happening in the organization</span>
+        <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);">2</span><span><strong>Reconnaissance</strong> — Collecting data to identify root causes and inform action</span>
+        <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);">3</span><span><strong>Planning</strong> — Designing an intervention grounded in what was learned</span>
+        <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);">4</span><span><strong>Acting</strong> — Implementing the intervention in the real organizational context</span>
+        <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);">5</span><span><strong>Evaluation</strong> — Did the intervention make a difference? Qual + quant evidence</span>
+        <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);">6</span><span><strong>Reflection</strong> — What worked, what didn't, implications for future cycles</span>
+      </div>
+
+      <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--sky);margin-bottom:8px;">Scenario Sprint</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:20px;">Read the student situation carefully. All four answers may seem plausible — you're looking for the <strong>most important first move</strong>. Select your answer, then read the feedback to understand the reasoning. 20 XP per correct answer, 50 XP bonus for a perfect round.</div>
+
+      <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--sky);margin-bottom:8px;">Case File Escape</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:20px;"><strong>Click all clue cards first</strong> before answering — the evidence matters. Each correct phase decision unlocks the next phase (40 XP). Wrong answers move you forward too, with an explanation. Completing the full case earns a 100 XP bonus.</div>
+
+      <div style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">A Note on the Answers</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;">These scenarios don't have one objectively correct answer — they have a <em>best first move</em> given the specific context. If you'd argue for a different choice, that instinct is worth examining. The feedback explains the reasoning, not the rule.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== LOGIN ========== -->
+<div id="login-screen" class="screen active">
+  <div class="login-box">
+    <div class="login-eyebrow">EdD in Educational Leadership</div>
+    <h1 class="login-title">MMAR Advisor Quest</h1>
+    <p class="login-sub">A serious training game for dissertation chairs. Learn to guide students through Mixed Methods Action Research — one scenario at a time.</p>
+    <label class="field-label" for="username-input">Choose your advisor name</label>
+    <input id="username-input" class="field-input" type="text" placeholder="e.g. DrFoster or ProfNash" maxlength="24" />
+    <button class="btn-primary" onclick="startGame()">Enter the Field →</button>
+  </div>
+</div>
+
+<!-- ========== HOME ========== -->
+<div id="home-screen" class="screen">
+  <nav class="topnav">
+    <div class="nav-brand">MMAR <span>ADVISOR</span> QUEST</div>
+    <div class="nav-right">
+      <button onclick="openHowToPlay()" style="background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);padding:5px 12px;border-radius:2px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)'">? How to play</button>
+      <span class="streak-badge" id="streak-display">🔥 0 day streak</span>
+      <span class="xp-badge" id="xp-display">0 XP</span>
+      <span class="username-tag" id="nav-username"></span>
+    </div>
+  </nav>
+  <div class="home-layout">
+    <div class="home-main">
+      <div class="welcome-banner">
+        <div class="welcome-name" id="welcome-name">Welcome back.</div>
+        <div class="welcome-desc">Your students are counting on you to understand their research process. Each round sharpens your advising instincts.</div>
+      </div>
+
+      <div class="section-label">Choose your training mode</div>
+      <div class="mode-cards">
+        <div class="mode-card" onclick="startQuiz()">
+          <span class="mode-tag tag-daily">Daily</span>
+          <span class="mode-icon">⚡</span>
+          <div class="mode-title">Scenario Sprint</div>
+          <div class="mode-desc">5 quick advising scenarios. Earn XP for correct answers. Build your streak. Climb the leaderboard.</div>
+        </div>
+        <div class="mode-card" onclick="startEscape()">
+          <span class="mode-tag tag-new">New</span>
+          <span class="mode-icon">🔍</span>
+          <div class="mode-title">Case File Escape</div>
+          <div class="mode-desc">One student. Six MMAR phases. Work through the case, gather clues, make the right calls to unlock each phase.</div>
+        </div>
+      </div>
+
+      <div class="section-label">How MMAR works — the phases</div>
+      <div style="background:white;border-radius:4px;border:2px solid var(--cream);padding:20px 24px;font-size:12px;line-height:2;color:var(--muted);">
+        <span style="color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;">1. Diagnosis</span> — Using data to understand what's really happening<br>
+        <span style="color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;">2. Reconnaissance</span> — Identifying root causes and potential interventions<br>
+        <span style="color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;">3. Planning</span> — Designing an intervention based on what was learned<br>
+        <span style="color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;">4. Acting</span> — Implementing the intervention in a real context<br>
+        <span style="color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;">5. Evaluation</span> — Did the intervention make a difference?<br>
+        <span style="color:var(--ink);font-family:'Syne',sans-serif;font-weight:600;">6. Reflection</span> — What worked, what didn't, what's next
+      </div>
+    </div>
+
+    <div class="home-sidebar">
+      <div class="section-label">Leaderboard — this week</div>
+      <div class="leaderboard-card" id="leaderboard-container">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== QUIZ ========== -->
+<div id="quiz-screen" class="screen">
+  <nav class="topnav">
+    <div class="nav-brand">MMAR <span>ADVISOR</span> QUEST</div>
+    <div class="nav-right">
+      <span class="xp-badge" id="quiz-xp-display">0 XP</span>
+    </div>
+  </nav>
+  <div class="quiz-layout">
+    <div class="quiz-progress">
+      <button class="quiz-close" onclick="goHome()" title="Back to home">✕</button>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="quiz-progress-bar" style="width:0%"></div>
+      </div>
+      <div class="progress-count" id="quiz-progress-count">0 / 5</div>
+    </div>
+
+    <div id="quiz-scenario-tag" class="scenario-tag"></div>
+    <h2 class="quiz-question" id="quiz-question-text"></h2>
+    <div class="quiz-context" id="quiz-context-text"></div>
+    <div class="answer-grid" id="quiz-answers"></div>
+    <div class="feedback-box" id="quiz-feedback"></div>
+    <button class="next-btn" id="quiz-next-btn" onclick="nextQuestion()">Continue →</button>
+  </div>
+</div>
+
+<!-- ========== ESCAPE ROOM ========== -->
+<div id="escape-screen" class="screen">
+  <nav class="topnav">
+    <div class="nav-brand">MMAR <span>CASE FILE</span></div>
+    <div class="nav-right">
+      <span class="xp-badge" id="escape-xp-display">0 XP</span>
+    </div>
+  </nav>
+  <div class="escape-layout">
+    <div class="escape-header">
+      <div class="escape-phase-indicator" id="escape-phase-dots"></div>
+      <button class="escape-close" onclick="goHome()">✕ Exit case</button>
+    </div>
+
+    <div class="case-file" id="escape-case-file">
+      <div class="case-file-stamp" id="escape-phase-stamp">PHASE 1</div>
+      <div class="case-label">Student Case File</div>
+      <div class="case-title" id="escape-case-title"></div>
+      <div class="case-body" id="escape-case-body"></div>
+    </div>
+
+    <div class="clue-grid" id="escape-clues"></div>
+
+    <div class="escape-question" id="escape-question-box">
+      <div class="escape-q-label">Your advising decision</div>
+      <div class="escape-q-text" id="escape-q-text"></div>
+    </div>
+
+    <div class="escape-answers" id="escape-answers"></div>
+    <div class="escape-feedback" id="escape-feedback"></div>
+    <button class="unlock-btn" id="escape-next-btn" onclick="nextEscapePhase()">Unlock Next Phase →</button>
+  </div>
+</div>
+
+<!-- ========== RESULTS ========== -->
+<div id="results-screen" class="screen">
+  <div class="results-box">
+    <div class="results-score-ring">
+      <div class="results-score-num" id="results-score">0</div>
+      <div class="results-score-label">correct</div>
+    </div>
+    <h2 class="results-title" id="results-title">Round Complete</h2>
+    <p class="results-message" id="results-message"></p>
+    <div class="xp-earned" id="results-xp">+0 XP earned</div>
+    <div class="results-actions">
+      <button class="btn-secondary" onclick="startQuiz()">Play Again</button>
+      <button class="btn-primary" style="width:auto;padding:12px 24px;" onclick="goHome()">Back to Home</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+
+const QUIZ_QUESTIONS = [
+  {
+    tag: "Program Structure",
+    question: "What is the most important first move when a second-year advisee says the work they've done in courses 'doesn't count' as their real dissertation yet?",
+    context: "Your advisee has been in the program two years. They've completed EDL 751, 752, and the design thinking course. They tell you: 'I know I've been doing stuff in class, but I feel like my actual dissertation hasn't started. All that coursework material — can I really use it?' They're waiting for permission to begin something they've already begun.",
+    answers: [
+      { text: "Validate their instinct to be cautious, then clarify: work from prior courses can inform the dissertation but typically needs to be substantially revised and reframed before it qualifies as dissertation-level writing.", correct: false },
+      { text: "Tell them clearly: yes, the work they've done in coursework is their dissertation in progress. Help them audit what they have, identify which phase it belongs to, and map what's still needed. They have more than they think.", correct: true },
+      { text: "Reassure them that the dissertation officially begins at the qualifying exam, so they're not behind — they're still in the preparation stage and the formal work starts soon enough.", correct: false },
+      { text: "Ask them to bring their coursework portfolio to the next meeting so you can assess together whether it meets dissertation standards before making any commitments about what counts.", correct: false }
+    ],
+    feedback: {
+      correct: "This is the right call and it matters more than it looks. Students who believe their dissertation 'hasn't started' lose momentum, underestimate what they have, and delay unnecessarily. The most powerful first move is direct affirmation: what you've been doing IS your dissertation. Then do the audit together — match their existing work to MMAR phases, name what's solid, identify the gaps. They almost always have more than they realize.",
+      wrong: "Any response that hedges, defers, or sets a future start point reinforces the misconception. Students in this program build their dissertation throughout coursework by design — that's the MMAR model. The most important first move is clear, immediate affirmation: your coursework work is your dissertation work. Everything else — revision, gap analysis, phase mapping — follows from that."
+    }
+  },
+  {
+    tag: "IRB & Site Changes",
+    question: "What is the most important first move when your advisee panics after changing jobs mid-dissertation, convinced they now need two IRB applications?",
+    context: "Your student left their school district and took a new position at a community college. They've been working on their Problem of Practice for a year. Now they're convinced the site change means starting over, including filing a second IRB. They're considering dropping the program.",
+    answers: [
+      { text: "Confirm their concern is legitimate — site changes mid-study are a serious complication that requires a full IRB amendment and possibly a committee meeting before work can continue.", correct: false },
+      { text: "Tell them to pause all dissertation activity and contact the graduate school IRB office first, before discussing anything else, since IRB decisions govern everything that follows.", correct: false },
+      { text: "Reassure them that MMAR research is contextually bound to one organization — one IRB covers the work. The real conversation is whether their Problem of Practice can be reframed for the new site, which is intellectually manageable.", correct: true },
+      { text: "Suggest they keep using their original site even after changing jobs, since the IRB already covers it and the disruption of reframing may not be worth it at this stage.", correct: false }
+    ],
+    feedback: {
+      correct: "Yes. The two-IRB fear is a myth that can stop a student cold — and in this case nearly pushed one out of the program. MMAR is not multi-site research. It's contextually bound to one organization. One IRB, typically approved in 2–3 weeks. The productive conversation is reframing the PoP for the new site, which is actually a sign of a resilient researcher, not a failure.",
+      wrong: "Any move that confirms or escalates the panic here does real harm. The two-IRB concern is based on a misunderstanding of what MMAR is: a contextually bound study of one organization, not a multi-site study. Reassurance is the right first move — followed by a conversation about reframing the Problem of Practice for the new organizational context."
+    }
+  },
+  {
+    tag: "Phase Identification",
+    question: "What is the most important first move when a student describes data collection work they've been doing informally — but haven't connected to their dissertation?",
+    context: "Your advisee mentions almost in passing: 'I've been doing some interviews with staff and running a quick survey to get a sense of why morale is low in our building. Just trying to understand what's going on.' They don't seem to realize this is dissertation-relevant work.",
+    answers: [
+      { text: "Ask whether their IRB covers this activity before going further — informal data collection can create compliance problems if it wasn't pre-approved, and that needs to be resolved first.", correct: false },
+      { text: "Tell them this sounds like reconnaissance and help them see that what they're calling 'just trying to understand' is formal MMAR dissertation work — then help them document and connect it to their Problem of Practice.", correct: true },
+      { text: "Encourage them to keep going informally for now — once they're further along in coursework, they'll have the framework to formalize it properly and it will make more sense in context.", correct: false },
+      { text: "Clarify whether this is diagnosis or reconnaissance before saying anything else, since the distinction matters for how the committee will evaluate the work and you want to be precise.", correct: false }
+    ],
+    feedback: {
+      correct: "This is a high-leverage advising moment. The student is already doing dissertation work and doesn't know it. Naming it — 'this is reconnaissance' — changes their relationship to the work. It builds confidence, reduces the feeling that the dissertation is some future mountain to climb, and lets you immediately help them document and formalize what they've already started. The phase distinction matters, but the first move is legitimizing the work.",
+      wrong: "The most important thing here isn't procedural precision or sequencing — it's recognition. This student is doing real MMAR work and framing it as informal noodling. The first move is to tell them clearly: what you're doing IS your dissertation. That realization can transform a student's confidence and momentum. Paperwork and phase labeling follow from that."
+    }
+  },
+  {
+    tag: "Scope Problems",
+    question: "What is the most important first move when your advisee presents a dissertation topic that is far too broad for an MMAR study?",
+    context: "Your student wants to study 'why teacher retention is low across the state, including rural, suburban, and urban districts.' They've invested three months in a literature review and are clearly excited. The scope is wrong for this methodology — but they don't know that yet.",
+    answers: [
+      { text: "Redirect them immediately and firmly to one organization — their own — before they invest more time in a literature review built for the wrong study. Three months is recoverable; twelve is not.", correct: false },
+      { text: "Acknowledge the importance of the topic first, then explain that MMAR is contextually bound to one organization. Help them find the version of this question that lives in their own workplace, which is often where the most meaningful work is.", correct: true },
+      { text: "Let them continue the literature review since strong background knowledge doesn't hurt — the scope problem can be addressed later when they move into the design phase and it becomes more concrete.", correct: false },
+      { text: "Suggest they consider switching to a PhD program or a policy-focused dissertation, since their interests seem better suited to large-scale generalizable research than to the MMAR practitioner model.", correct: false }
+    ],
+    feedback: {
+      correct: "Both urgency and relationship matter here. Affirming the importance of the topic before redirecting keeps the student's investment intact while correcting the path. The key content: MMAR is not a large-scale generalizable study — it's a deep, rigorous investigation of a Problem of Practice in the student's own organizational context. That's not a consolation prize; it's often more powerful. Help them find their version of this question at home.",
+      wrong: "Waiting lets the scope problem compound. Redirecting without acknowledgment risks losing the student's buy-in. Suggesting a program switch is rarely the right move and can feel like a rejection. The most effective first move combines warmth with clarity: affirm the topic's importance, explain the MMAR frame, and help them locate the question in their own organization — where they have access, relationships, and real stakes."
+    }
+  },
+  {
+    tag: "QE Preparation",
+    question: "What is the most important first move when a student's writing is strong but they struggle to defend their design decisions out loud?",
+    context: "In a QE prep meeting, your advisee can't explain why they chose a survey over interviews, or why the intervention targets administrators rather than teachers. Ask them a follow-up question and they go blank. Their written chapters are clear and well-reasoned. The QE is six weeks away.",
+    answers: [
+      { text: "Ask them to rewrite the rationale sections with more explicit justification — if they can't say it, they probably haven't fully worked it out on paper yet, and stronger writing will give them something to fall back on.", correct: false },
+      { text: "Postpone the QE and give them more time — six weeks isn't enough to close this gap, and a failed QE is harder to recover from than a delayed one.", correct: false },
+      { text: "Treat this as an oral fluency gap, not a knowledge gap. Start mock Q&A immediately: ask them to defend every design decision aloud, without notes, in your presence, repeatedly until it feels natural.", correct: true },
+      { text: "Brief the committee in advance so they know to be gentle with oral questions — the student's written work demonstrates competence, and the committee should weight that more heavily than oral performance.", correct: false }
+    ],
+    feedback: {
+      correct: "This is the right diagnosis and the right response. Writing competence and oral defense competence are distinct skills — the student clearly understands their work, but hasn't practiced performing that understanding under pressure. Six weeks is enough time to close this gap through deliberate practice. Mock Q&A, devil's advocate questions, defend-every-choice conversations — this is trainable. Don't mistake silence for ignorance.",
+      wrong: "More writing won't solve an oral performance problem. Postponing treats a trainable skill as an immovable obstacle. Briefing the committee to go easy is doing the student a disservice — they'll face harder questions in the real defense. The diagnosis here is oral fluency, not knowledge depth. The fix is practice, not protection or delay. Six weeks of focused mock Q&A can transform a student's readiness."
+    }
+  }
+];
+
+const ESCAPE_PHASES = [
+  {
+    phase: 1,
+    label: "Diagnosis",
+    caseTitle: "The Problem Nobody Will Name",
+    caseBody: "Marcus is an instructional coach at Riverside High School. He's noticed that despite two years of professional development on student engagement strategies, classroom visits show the same patterns: passive students, teacher-centered instruction, low participation. Teachers say the PD was 'helpful' in surveys but nothing has changed. Marcus wants to understand why.",
+    clues: [
+      { icon: "📊", label: "Survey Data", title: "Staff PD Survey", content: "94% of teachers rated last year's PD as 'valuable.' Zero teachers reported changing their practice as a result." },
+      { icon: "📋", label: "Observation Notes", title: "Classroom Visits", content: "In 18 of 22 classrooms observed, student talk time was under 10% of total class time." },
+      { icon: "💬", label: "Informal Conversation", title: "Teacher Lounge", content: "Three teachers privately told Marcus: 'We try the strategies but kids don't respond. It must be a home environment issue.'" },
+      { icon: "🏫", label: "Context", title: "Organizational Reality", content: "The school's formal evaluation system rewards compliance and quiet classrooms. Administrators do not reward risk-taking instructional practice." }
+    ],
+    question: "Based on the clues, what is the most accurate diagnosis of the Problem of Practice?",
+    answers: [
+      { text: "Teachers don't value professional development and need more rigorous accountability.", correct: false },
+      { text: "Student engagement is low because of home environment factors outside the school's control.", correct: false },
+      { text: "There is a structural misalignment: PD teaches engagement strategies, but the school's evaluation and culture system rewards the opposite behaviors.", correct: true },
+      { text: "Marcus needs more data before he can diagnose anything.", correct: false }
+    ],
+    feedback: {
+      correct: "Locked. The diagnosis is a structural misalignment — teachers are trained to do one thing but rewarded for another. This is a systems-level problem, not a teacher motivation problem. Marcus's intervention will need to address the organizational conditions, not just teacher behavior. Phase 1 unlocked.",
+      wrong: "Look at all four clues together. Teachers say PD was valuable but nothing changed. Observations confirm it. Informally, teachers blame students — but the evaluation system rewards quiet classrooms. The diagnosis is structural: the org system works against the very practices PD promotes."
+    }
+  },
+  {
+    phase: 2,
+    label: "Reconnaissance",
+    caseTitle: "Finding the Root",
+    caseBody: "Marcus has diagnosed a structural misalignment. Now he needs to understand it more deeply before he can design an intervention. He conducts reconnaissance: targeted data collection to understand root causes and identify what kind of action might help.",
+    clues: [
+      { icon: "🎤", label: "Focus Group", title: "Teacher Focus Group (n=6)", content: "Teachers report feeling 'watched' during observations. Risk-taking feels unsafe. 'If a lesson flops, it goes in my file.'" },
+      { icon: "📖", label: "Document Review", title: "Evaluation Rubric", content: "The current rubric scores 'classroom management' and 'pace/flow' but has no indicator for student inquiry or productive struggle." },
+      { icon: "🔍", label: "Literature", title: "Research Synthesis", content: "Instructional change research shows psychological safety is a prerequisite for teacher experimentation (Edmondson, 1999). PD without safe practice conditions rarely transfers." },
+      { icon: "📝", label: "Admin Interview", title: "Department Chair Interview", content: "The chair says: 'I want teachers to try new things but parents complain when classes feel 'chaotic.' I can't ignore that.'" }
+    ],
+    question: "What should Marcus's intervention target, based on reconnaissance findings?",
+    answers: [
+      { text: "Replace the current PD program with a new one focused on engagement.", correct: false },
+      { text: "Create psychological safety conditions for teacher experimentation — starting with how classrooms are observed and evaluated.", correct: true },
+      { text: "Educate parents about the value of student-centered learning.", correct: false },
+      { text: "Pilot an engagement program with one willing teacher to generate proof of concept.", correct: false }
+    ],
+    feedback: {
+      correct: "Phase 2 unlocked. The reconnaissance confirms: teachers want to change but the observation/evaluation system makes experimentation feel unsafe. An intervention that only adds more PD would repeat the same failure. The action must address the conditions that prevent transfer — starting with how teachers are observed.",
+      wrong: "The reconnaissance data points to psychological safety as the root condition. More PD without changing the safety conditions is the same intervention that already failed. Marcus needs to address the structural conditions — observation norms, rubric language, admin expectations — not just teacher knowledge."
+    }
+  },
+  {
+    phase: 3,
+    label: "Planning",
+    caseTitle: "Designing the Intervention",
+    caseBody: "Marcus knows the target: create psychological safety for instructional risk-taking. Now he must design a realistic, contextually appropriate intervention he can actually implement as an instructional coach at Riverside High.",
+    clues: [
+      { icon: "⏰", label: "Timeline", title: "Semester Constraints", content: "Marcus has 12 weeks in the spring semester. His role gives him access to teacher collaboration time on Wednesdays." },
+      { icon: "🤝", label: "Allies", title: "Potential Partners", content: "Two teachers have expressed interest in piloting new approaches. The chair said she'd be 'open to a conversation' about the rubric." },
+      { icon: "📏", label: "Scope Check", title: "What Marcus Can Actually Control", content: "Marcus cannot change the district evaluation system. He can influence how observations are conducted at the school level and how collaboration time is used." },
+      { icon: "🎯", label: "Theory of Action", title: "If/Then Logic", content: "If teachers have low-stakes spaces to practice and receive non-evaluative feedback, then they may be more willing to try engagement strategies in their classrooms." }
+    ],
+    question: "Which intervention plan is most appropriately scoped for Marcus's context?",
+    answers: [
+      { text: "Lobby the district to redesign the teacher evaluation system from scratch.", correct: false },
+      { text: "Launch a voluntary 'instructional lab' during Wednesday collaboration time — teachers try engagement strategies in a low-stakes peer observation format, with Marcus facilitating non-evaluative feedback.", correct: true },
+      { text: "Require all teachers to implement three engagement strategies per week and track results.", correct: false },
+      { text: "Present the reconnaissance findings to the school board and request a policy change.", correct: false }
+    ],
+    feedback: {
+      correct: "Phase 3 unlocked. This intervention is appropriately scoped — it works within Marcus's actual sphere of influence, creates the psychological safety conditions identified in recon, uses existing resources (Wednesday time), and starts with willing participants. It's testable, not transformational. That's exactly right.",
+      wrong: "MMAR interventions must be contextually appropriate — meaning they have to fit within what the researcher can actually control. Marcus is an instructional coach, not a district policy director. The intervention must use his real resources, his real access, and his real relationships. Scope it to what's achievable."
+    }
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+
+let state = {
+  username: '',
+  xp: 0,
+  streak: 0,
+  quizIndex: 0,
+  quizScore: 0,
+  quizAnswered: false,
+  escapePhase: 0,
+  escapeAnswered: false,
+  leaderboard: []
+};
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  loadLeaderboard();
+  showScreen('home-screen');
+}
+
+// ============================================================
+// LOGIN
+// ============================================================
+
+function startGame() {
+  const input = document.getElementById('username-input').value.trim();
+  if (!input) { alert('Pick an advisor name to continue.'); return; }
+  state.username = input;
+  state.xp = 0;
+  state.streak = 1;
+
+  document.getElementById('nav-username').textContent = state.username;
+  document.getElementById('welcome-name').textContent = `Welcome, ${state.username}.`;
+
+  updateXPDisplay();
+  showScreen('home-screen');
+  loadLeaderboard();
+  // Show onboarding for new players
+  setTimeout(showOnboarding, 300);
+}
+
+// ============================================================
+// XP & LEADERBOARD
+// ============================================================
+
+async function addXP(amount) {
+  state.xp += amount;
+  updateXPDisplay();
+  await saveScore();
+}
+
+function updateXPDisplay() {
+  document.getElementById('xp-display').textContent = `${state.xp} XP`;
+  document.getElementById('quiz-xp-display').textContent = `${state.xp} XP`;
+  document.getElementById('escape-xp-display').textContent = `${state.xp} XP`;
+  document.getElementById('streak-display').textContent = `🔥 ${state.streak} day streak`;
+}
+
+async function saveScore() {
+  try {
+    const res = await fetch('/api/scores', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: state.username, xp: state.xp })
+    });
+    if (res.ok) {
+      const scores = await res.json();
+      state.leaderboard = scores.map(s => ({
+        ...s,
+        isYou: s.username.toLowerCase() === state.username.toLowerCase()
+      }));
+      renderLeaderboard();
+    }
+  } catch (err) {
+    // Fail silently — leaderboard still works from local state
+    console.warn('Score save failed:', err);
+  }
+}
+
+async function loadLeaderboard() {
+  try {
+    const res = await fetch('/api/scores');
+    if (res.ok) {
+      const scores = await res.json();
+      state.leaderboard = scores.map(s => ({
+        ...s,
+        isYou: s.username.toLowerCase() === state.username.toLowerCase()
+      }));
+    }
+  } catch (err) {
+    console.warn('Leaderboard load failed:', err);
+  }
+  renderLeaderboard();
+}
+
+function renderLeaderboard() {
+  const sorted = [...state.leaderboard].sort((a, b) => b.xp - a.xp);
+  const rankClasses = ['gold', 'silver', 'bronze'];
+  const rankEmojis = ['🥇', '🥈', '🥉'];
+
+  let html = `<div class="leaderboard-header">
+    <div class="leaderboard-title">All Time</div>
+    <div style="font-size:11px;color:var(--muted);">${sorted.length} advisors</div>
+  </div>`;
+
+  if (sorted.length === 0) {
+    html += `<div class="lb-row" style="color:var(--muted);font-size:12px;">No scores yet — be the first!</div>`;
+  }
+
+  sorted.forEach((entry, i) => {
+    const rankClass = i < 3 ? rankClasses[i] : '';
+    const rankLabel = i < 3 ? rankEmojis[i] : `${i + 1}`;
+    const initial = (entry.username || entry.name || '?').charAt(0).toUpperCase();
+    const name = entry.username || entry.name;
+    const youClass = entry.isYou ? ' is-you' : '';
+    const youTag = entry.isYou ? '<span class="lb-you-tag">YOU</span>' : '';
+    html += `<div class="lb-row${youClass}">
+      <div class="lb-rank ${rankClass}">${rankLabel}</div>
+      <div class="lb-avatar" style="background:${entry.color};color:white;">${initial}</div>
+      <div class="lb-name">${name} ${youTag}</div>
+      <div class="lb-xp">${entry.xp} XP</div>
+    </div>`;
+  });
+
+  document.getElementById('leaderboard-container').innerHTML = html;
+}
+
+// ============================================================
+// QUIZ MODE
+// ============================================================
+
+function startQuiz() {
+  state.quizIndex = 0;
+  state.quizScore = 0;
+  renderQuizQuestion();
+  showScreen('quiz-screen');
+}
+
+function renderQuizQuestion() {
+  const q = QUIZ_QUESTIONS[state.quizIndex];
+  state.quizAnswered = false;
+
+  const pct = (state.quizIndex / QUIZ_QUESTIONS.length) * 100;
+  document.getElementById('quiz-progress-bar').style.width = pct + '%';
+  document.getElementById('quiz-progress-count').textContent = `${state.quizIndex} / ${QUIZ_QUESTIONS.length}`;
+
+  document.getElementById('quiz-scenario-tag').textContent = q.tag;
+  document.getElementById('quiz-question-text').textContent = q.question;
+  document.getElementById('quiz-context-text').textContent = q.context;
+
+  const fb = document.getElementById('quiz-feedback');
+  fb.className = 'feedback-box';
+  fb.innerHTML = '';
+
+  document.getElementById('quiz-next-btn').classList.remove('visible');
+
+  // Shuffle answers
+  const shuffled = [...q.answers].sort(() => Math.random() - 0.5);
+
+  let html = '';
+  shuffled.forEach((a, i) => {
+    html += `<button class="answer-btn" onclick="selectAnswer(this, ${a.correct}, ${i})">${a.text}</button>`;
+  });
+  document.getElementById('quiz-answers').innerHTML = html;
+}
+
+async function selectAnswer(btn, isCorrect, idx) {
+  if (state.quizAnswered) return;
+  state.quizAnswered = true;
+
+  const q = QUIZ_QUESTIONS[state.quizIndex];
+  const allBtns = document.querySelectorAll('.answer-btn');
+  allBtns.forEach(b => b.disabled = true);
+
+  const fb = document.getElementById('quiz-feedback');
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    state.quizScore++;
+    await addXP(20);
+    fb.className = 'feedback-box correct-fb';
+    fb.innerHTML = `<div class="feedback-title">✓ Correct — +20 XP</div>${q.feedback.correct}`;
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'feedback-box wrong-fb';
+    fb.innerHTML = `<div class="feedback-title">✗ Not quite</div>${q.feedback.wrong}`;
+    // Reveal correct
+    allBtns.forEach(b => {
+      if (b.textContent === q.answers.find(a => a.correct).text) {
+        b.classList.add('reveal-correct');
+      }
+    });
+  }
+
+  document.getElementById('quiz-next-btn').classList.add('visible');
+}
+
+function nextQuestion() {
+  state.quizIndex++;
+  if (state.quizIndex >= QUIZ_QUESTIONS.length) {
+    showResults();
+  } else {
+    renderQuizQuestion();
+  }
+}
+
+async function showResults() {
+  const score = state.quizScore;
+  const total = QUIZ_QUESTIONS.length;
+  const bonusXP = score === total ? 50 : 0;
+  if (bonusXP) await addXP(bonusXP);
+
+  document.getElementById('results-score').textContent = `${score}/${total}`;
+
+  const messages = [
+    ["Room to grow.", "Review the feedback on each question — the rationale matters as much as the answer."],
+    ["Getting there.", "You're building your MMAR instincts. Keep going."],
+    ["Solid advising.", "You understand the fundamentals. Your students are in good hands."],
+    ["Strong round.", "You're reading these situations well."],
+    ["Perfect round! +50 bonus XP", "You nailed every scenario. Your students are lucky to have you."]
+  ];
+
+  const msgIndex = Math.min(score, messages.length - 1);
+  document.getElementById('results-title').textContent = messages[msgIndex][0];
+  document.getElementById('results-message').textContent = messages[msgIndex][1];
+  document.getElementById('results-xp').textContent = `+${score * 20 + bonusXP} XP earned`;
+
+  showScreen('results-screen');
+}
+
+// ============================================================
+// ESCAPE ROOM
+// ============================================================
+
+function startEscape() {
+  state.escapePhase = 0;
+  renderEscapePhase();
+  showScreen('escape-screen');
+}
+
+function renderEscapePhase() {
+  const phase = ESCAPE_PHASES[state.escapePhase];
+  state.escapeAnswered = false;
+
+  // Phase dots
+  let dotsHtml = '';
+  ESCAPE_PHASES.forEach((p, i) => {
+    let cls = '';
+    if (i < state.escapePhase) cls = 'unlocked';
+    else if (i === state.escapePhase) cls = 'current';
+    dotsHtml += `<div class="phase-dot ${cls}">${i + 1}</div>`;
+  });
+  // Add remaining locked dots
+  for (let i = ESCAPE_PHASES.length; i < 6; i++) {
+    dotsHtml += `<div class="phase-dot">${i + 1}</div>`;
+  }
+  document.getElementById('escape-phase-dots').innerHTML = dotsHtml;
+
+  document.getElementById('escape-phase-stamp').textContent = `PHASE ${phase.phase}: ${phase.label.toUpperCase()}`;
+  document.getElementById('escape-case-title').textContent = phase.caseTitle;
+  document.getElementById('escape-case-body').textContent = phase.caseBody;
+
+  // Clues
+  let clueHtml = '';
+  phase.clues.forEach((c, i) => {
+    clueHtml += `<div class="clue-card" onclick="revealClue(this, ${i})">
+      <div class="clue-icon">${c.icon}</div>
+      <div class="clue-label">${c.label}</div>
+      <div class="clue-title">${c.title}</div>
+      <div class="clue-content">${c.content}</div>
+    </div>`;
+  });
+  document.getElementById('escape-clues').innerHTML = clueHtml;
+
+  // Question
+  document.getElementById('escape-q-text').textContent = phase.question;
+
+  // Answers
+  const shuffled = [...phase.answers].sort(() => Math.random() - 0.5);
+  let ansHtml = '';
+  shuffled.forEach(a => {
+    ansHtml += `<button class="escape-answer-btn" onclick="selectEscapeAnswer(this, ${a.correct})">${a.text}</button>`;
+  });
+  document.getElementById('escape-answers').innerHTML = ansHtml;
+
+  const fb = document.getElementById('escape-feedback');
+  fb.className = 'escape-feedback';
+  fb.innerHTML = '';
+
+  document.getElementById('escape-next-btn').classList.remove('visible');
+}
+
+function revealClue(card, idx) {
+  card.classList.toggle('revealed');
+}
+
+async function selectEscapeAnswer(btn, isCorrect) {
+  if (state.escapeAnswered) return;
+  state.escapeAnswered = true;
+
+  const phase = ESCAPE_PHASES[state.escapePhase];
+  const allBtns = document.querySelectorAll('.escape-answer-btn');
+  allBtns.forEach(b => b.disabled = true);
+
+  const fb = document.getElementById('escape-feedback');
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    await addXP(40);
+    fb.className = 'escape-feedback correct-fb';
+    fb.innerHTML = `<strong>🔓 Phase ${phase.phase} Unlocked — +40 XP</strong><br><br>${phase.feedback.correct}`;
+  } else {
+    btn.classList.add('wrong');
+    await addXP(10);
+    fb.className = 'escape-feedback wrong-fb';
+    fb.innerHTML = `<strong>Not the right call.</strong><br><br>${phase.feedback.wrong}`;
+    allBtns.forEach(b => {
+      if (b.textContent === phase.answers.find(a => a.correct).text) {
+        b.classList.add('reveal-correct');
+      }
+    });
+  }
+
+  const nextLabel = state.escapePhase < ESCAPE_PHASES.length - 1
+    ? `Unlock Phase ${state.escapePhase + 2} →`
+    : 'Complete Case →';
+  document.getElementById('escape-next-btn').textContent = nextLabel;
+  document.getElementById('escape-next-btn').classList.add('visible');
+}
+
+async function nextEscapePhase() {
+  state.escapePhase++;
+  if (state.escapePhase >= ESCAPE_PHASES.length) {
+    // Case complete
+    await addXP(100);
+    document.getElementById('results-score').textContent = '3/3';
+    document.getElementById('results-title').textContent = '🔓 Case Closed';
+    document.getElementById('results-message').textContent = 'You guided Marcus through Diagnosis, Reconnaissance, and Planning. You understand how MMAR builds from evidence. That\'s what your students need from you.';
+    document.getElementById('results-xp').textContent = '+100 completion bonus XP';
+    showScreen('results-screen');
+  } else {
+    renderEscapePhase();
+  }
+}
+
+// ============================================================
+// ONBOARDING
+// ============================================================
+
+let onboardStep = 0;
+const ONBOARD_TOTAL = 4;
+
+function showOnboarding() {
+  onboardStep = 0;
+  renderOnboardStep();
+  const el = document.getElementById('onboarding-overlay');
+  el.style.display = 'flex';
+}
+
+function renderOnboardStep() {
+  const steps = document.querySelectorAll('.onboard-step');
+  steps.forEach((s, i) => s.style.display = i === onboardStep ? 'block' : 'none');
+
+  // Dots
+  let dots = '';
+  for (let i = 0; i < ONBOARD_TOTAL; i++) {
+    dots += `<div style="width:8px;height:8px;border-radius:50%;background:${i === onboardStep ? 'var(--accent)' : 'var(--cream)'};transition:background 0.2s;"></div>`;
+  }
+  document.getElementById('onboard-dots').innerHTML = dots;
+
+  // Buttons
+  const prevBtn = document.getElementById('onboard-prev-btn');
+  const nextBtn = document.getElementById('onboard-next-btn');
+  prevBtn.style.visibility = onboardStep === 0 ? 'hidden' : 'visible';
+  nextBtn.textContent = onboardStep === ONBOARD_TOTAL - 1 ? "Let's go →" : "Next →";
+}
+
+function onboardNext() {
+  if (onboardStep < ONBOARD_TOTAL - 1) {
+    onboardStep++;
+    renderOnboardStep();
+  } else {
+    document.getElementById('onboarding-overlay').style.display = 'none';
+  }
+}
+
+function onboardPrev() {
+  if (onboardStep > 0) {
+    onboardStep--;
+    renderOnboardStep();
+  }
+}
+
+// ============================================================
+// HOW TO PLAY MODAL
+// ============================================================
+
+function openHowToPlay() {
+  document.getElementById('howtoplay-overlay').style.display = 'flex';
+}
+
+function closeHowToPlay() {
+  document.getElementById('howtoplay-overlay').style.display = 'none';
+}
+
+// Close modals on backdrop click
+document.getElementById('howtoplay-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeHowToPlay();
+});
+
+document.getElementById('username-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startGame();
+});
+</script>
+</body>
+</html>

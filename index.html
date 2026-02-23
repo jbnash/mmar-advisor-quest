@@ -1392,6 +1392,9 @@ function startGame() {
   state.xp = 0;
   state.streak = 1;
 
+  // Save to localStorage so refresh doesn't lose them
+  localStorage.setItem('mmar_username', state.username);
+
   document.getElementById('nav-username').textContent = state.username;
   document.getElementById('welcome-name').textContent = `Welcome, ${state.username}.`;
 
@@ -1400,6 +1403,28 @@ function startGame() {
   loadLeaderboard();
   // Show onboarding for new players
   setTimeout(showOnboarding, 300);
+}
+
+// ============================================================
+// RETURNING PLAYER CHECK — runs on page load
+// ============================================================
+
+function checkReturningPlayer() {
+  const saved = localStorage.getItem('mmar_username');
+  if (saved) {
+    state.username = saved;
+    document.getElementById('nav-username').textContent = state.username;
+    document.getElementById('welcome-name').textContent = `Welcome back, ${state.username}.`;
+    showScreen('home-screen');
+    // Load their XP from the leaderboard API
+    loadLeaderboard().then(() => {
+      const me = state.leaderboard.find(s => s.username.toLowerCase() === state.username.toLowerCase());
+      if (me) {
+        state.xp = me.xp;
+        updateXPDisplay();
+      }
+    });
+  }
 }
 
 // ============================================================
@@ -1774,6 +1799,9 @@ document.getElementById('howtoplay-overlay').addEventListener('click', function(
 document.getElementById('username-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') startGame();
 });
+
+// Check for returning player on load
+checkReturningPlayer();
 </script>
 </body>
 </html>

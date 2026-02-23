@@ -1,52 +1,44 @@
-import { getStore } from "@netlify/blobs";
+const { getStore } = require("@netlify/blobs");
 
 const STORE_NAME = "mmar-leaderboard";
 
-export default async (req, context) => {
-  // Handle CORS for local development
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-    "Content-Type": "application/json",
-  };
+const headers = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+  "Content-Type": "application/json",
+};
 
-  // Preflight
-  if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers });
+exports.handler = async function(event, context) {
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers, body: "" };
   }
 
-  const store = getStore(STORE_NAME);
+  const store = getStore({ name: STORE_NAME, consistency: "strong" });
 
-  // GET — return full leaderboard
-  if (req.method === "GET") {
+  if (event.httpMethod === "GET") {
     try {
       const raw = await store.get("scores");
       const scores = raw ? JSON.parse(raw) : [];
-      return new Response(JSON.stringify(scores), { status: 200, headers });
+      return { statusCode: 200, headers, body: JSON.stringify(scores) };
     } catch (err) {
-      return new Response(JSON.stringify([]), { status: 200, headers });
+      return { statusCode: 200, headers, body: JSON.stringify([]) };
     }
   }
 
-  // POST — save or update a player's score
-  if (req.method === "POST") {
+  if (event.httpMethod === "POST") {
     try {
-      const body = await req.json();
+      const body = JSON.parse(event.body || "{}");
       const { username, xp } = body;
 
       if (!username || typeof xp !== "number") {
-        return new Response(JSON.stringify({ error: "Invalid payload" }), {
-          status: 400,
-          headers,
-        });
+        return { statusCode: 400, headers, body: JSON.stringify({ error: "Invalid payload" }) };
       }
 
-      // Load existing scores
-      const raw = await store.get("scores").catch(() => null);
+      let raw = null;
+      try { raw = await store.get("scores"); } catch(e) {}
       let scores = raw ? JSON.parse(raw) : [];
 
-      // Seed some fake players if empty so leaderboard isn't lonely
       if (scores.length === 0) {
         scores = [
           { username: "DrKeller", xp: 1240, color: "#2a5c45" },
@@ -57,42 +49,23 @@ export default async (req, context) => {
         ];
       }
 
-      // Update or insert player
-      const existing = scores.find(
-        (s) => s.username.toLowerCase() === username.toLowerCase()
-      );
+      const existing = scores.find(s => s.username.toLowerCase() === username.toLowerCase());
       if (existing) {
-        existing.xp = xp; // always use latest total, not additive
+        existing.xp = xp;
       } else {
-        // Assign a deterministic color based on username
         const colors = ["#2a5c45", "#2b5fa0", "#8b3a8b", "#c9952a", "#d4401a", "#1a6b8a", "#5c2a45"];
-        const colorIndex =
-          username.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) %
-          colors.length;
+        const colorIndex = username.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % colors.length;
         scores.push({ username, xp, color: colors[colorIndex] });
       }
 
-      // Sort descending
       scores.sort((a, b) => b.xp - a.xp);
-
-      // Save back
       await store.set("scores", JSON.stringify(scores));
 
-      return new Response(JSON.stringify(scores), { status: 200, headers });
+      return { statusCode: 200, headers, body: JSON.stringify(scores) };
     } catch (err) {
-      return new Response(JSON.stringify({ error: err.message }), {
-        status: 500,
-        headers,
-      });
+      return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
     }
   }
 
-  return new Response(JSON.stringify({ error: "Method not allowed" }), {
-    status: 405,
-    headers,
-  });
-};
-
-export const config = {
-  path: "/api/scores",
+  return { statusCode: 405, headers, body: JSON.stringify({ error: "Method not allowed" }) };
 };
